@@ -1,237 +1,492 @@
-AI Engineering Company Project — Student Template
-4Geeks Academy AI Engineering
+# CONTEXT — TrackFlow
 
-Base template for transversal projects in the AI Engineering Career Program — 4Geeks Academy.
+**Milestone 2: Programming Fundamentals**  
+**Company:** TrackFlow — Last-Mile Delivery & Warehouse Management  
+**Your Role:** Junior AI Engineer, TrackFlow Tech Team  
+**Project Owner:** Ana Whitfield, Head of Warehouse Operations
 
-Estas instrucciones tambien estan disponibles en espanol.
+---
 
-Purpose
-This repository is the starter template for transversal projects. You will work on real company scenarios (Brasaland, TrackFlow, Nexova), building deliverables that map to course milestones (Web, Programming, Backend, Telemetry, RAG, Agents, Workflows, Real-time).
+## About TrackFlow
 
-Create a template from this repository.
-Replace the placeholder CONTEXT.md with your assigned company context.
-Use skills/ and the directory-level README.md files as working guidance.
-How to start
-Use this repository as a template and create your own project repo.
-Clone your repository (or open it in Codespaces).
-Replace CONTEXT.md with the full context for your assigned company.
-Read this folder guide and open the README.md of the folder you are working in.
-Start implementing in the right folder — do not dump everything in the root.
-Document what you add: each new app, service, agent, or pipeline gets a subfolder + README.
-How to think about this monorepo
-You are building one company across many milestones and projects. Each top-level folder has a single responsibility — like a real engineering team repo.
+TrackFlow is a last-mile delivery and warehouse management company operating in the United States (Los Angeles) and Spain (Zaragoza). The company manages warehouses for e-commerce brands and handles the final delivery to end customers. You're part of TrackFlow Tech, the internal unit leading the company's digital transformation.
 
-Layer	Folders	What lives here
-Company context	CONTEXT.md	Domain facts, field names, constraints for your assigned company
-User-facing	uis/, services/	Frontends and backends users (or operators) interact with
-Data	data/	Raw files, pipelines, processed datasets, evaluation sets
-AI	agents/, skills/, mcps/	Agents, reusable agent capabilities, MCP tool servers
-Automation	workflows/	n8n flows and cross-system orchestration
-Reuse	packages/, shared/	Shared types, SDKs, schemas, templates
-Operations	infra/, scripts/, internal/	Docker, deploy configs, one-off scripts, internal CLIs
-Documentation	docs/	Architecture, decisions, conventions for the whole repo
-Rule of thumb: if it has a UI → uis/. If it exposes an API or runs in the background → services/. If it moves or transforms data → data/. If an AI model does the work → agents/ (+ skills/ or mcps/ as needed).
+---
 
-Current status of the template
-💡 This repository currently provides a base folder structure and documentation skeleton only. It does not include runnable apps or global scripts yet.
+## Your Assignment
 
-CONTEXT.md is a placeholder and must be replaced with your assigned company context.
-There is no root AGENTS.md yet.
-Shared package metadata exists in packages/shared/package.json (@repo/shared-types), but no workspace runner is configured at root.
-Folder guide — what goes where
-Read the linked README.md inside each folder before you start coding there.
+Ana Whitfield needs you to build the core data processing logic for TrackFlow's warehouse and carrier management systems. Currently, warehouse managers and logistics coordinators handle everything manually — tracking inventory, scoring carriers, calculating shipping costs, and managing order fulfillment. This milestone focuses on building the TypeScript functions that will power inventory control and carrier selection.
 
-Root files
-Path	Purpose	What you do here
-CONTEXT.md	Single source of truth for your company (Brasaland, TrackFlow, or Nexova)	First step: copy your assigned company briefing here so every app, agent, and prompt uses the same domain
-docker-compose.yml	Local dev orchestration for the whole stack	Keep at repo root — wires services/, databases, and other containers from one place
-README.md / README.es.md	This guide	Orientation — you are here
-uis/ — user interfaces
-Purpose: All frontend applications — anything a human sees and clicks.
+This is pure programming — no AI, no prompting. Ana needs reliable code that won't break when processing thousands of orders per day.
 
-Put here:
+---
 
-Public website (website/)
-Internal admin / backoffice (backoffice/)
-Customer portals, loyalty apps, Streamlit/Gradio tools, dashboards with a UI
-Examples: corporate landing page, operations backoffice, loyalty portal, telemetry dashboard UI
+## What You're Building
 
-→ See uis/README.md
+You will implement a set of TypeScript utilities to:
 
-services/ — centralized company API (FastAPI)
-Purpose: One centralized FastAPI backend for the whole company — a single entry point that keeps complexity low as the project grows.
+1. **Model shipment, inventory, and carrier data** using interfaces
+2. **Filter and search inventory** by SKU, location, and stock levels
+3. **Score carriers** based on cost, speed, and reliability
+4. **Calculate shipping costs** based on weight, distance, and carrier rates
+5. **Generate warehouse reports** with aggregated metrics
+6. **Validate data** before processing orders
 
-Put here:
+---
 
-One main FastAPI app (e.g. api/) with routers/modules per domain (locations, menus, sales, telemetry, etc.)
-Background workers only when they truly need to run separately from the API
-Recommendation: avoid splitting into many microservices early. Add endpoints to the same FastAPI app; extract a worker only when necessary.
+## Business Entities
 
-Examples: /locations, /menus, /sales/reports, webhook handlers, scheduled jobs
+### Product
 
-→ See services/README.md
+Represents a product stored in TrackFlow's warehouses.
 
-data/ — datasets, pipelines, and evaluation
-Purpose: Everything data-related, from raw files to production-ready tables.
+**Interface: `Product`**
 
-Subfolder	Purpose	What you do here
-data/raw/	Untouched source data	Store dumps, exports, sample CSVs/JSON — document origin and PII rules
-data/pipelines/	ETL/ELT jobs	Write ingestion, cleaning, and transformation scripts
-data/process/	Clean / intermediate outputs	Save artifacts produced by pipelines (features, aggregates, clean tables)
-data/eval/	Quality measurement	Golden sets, RAG/agent eval datasets, experiment metrics
-Flow: raw → pipelines → process → consumed by services/, uis/, or agents/. Use eval to prove quality.
+```typescript
+interface Product {
+  sku: string; // Stock Keeping Unit (e.g., "SHOE-BLK-42")
+  name: string; // Product name
+  category: ProductCategory; // Product category
+  weightKg: number; // Weight in kilograms
+  dimensions: Dimensions; // Length, width, height in cm
+  warehouse: WarehouseLocation; // Current warehouse
+  stockQuantity: number; // Available units
+  minStockThreshold: number; // Minimum stock before alert
+  unitCostUSD: number; // Cost per unit in USD
+  isFragile: boolean; // Requires special handling
+  status: ProductStatus; // Current status
+}
 
-agents/ — AI agents
-Purpose: Autonomous or semi-autonomous AI assistants for the company.
+interface Dimensions {
+  lengthCm: number;
+  widthCm: number;
+  heightCm: number;
+}
 
-Put here:
+type ProductCategory =
+  | "Fashion"
+  | "Electronics"
+  | "Cosmetics"
+  | "Home"
+  | "Other";
+type WarehouseLocation = "Los Angeles" | "Zaragoza";
+type ProductStatus = "Active" | "Low stock" | "Out of stock" | "Discontinued";
+```
 
-One subfolder per agent (e.g. support-agent/, onboarding-agent/)
-Agent config, prompts, tools wiring, tests
-Start from agents/_template/ when creating a new agent
-Examples: customer support bot, employee onboarding copilot, training assistant
+**Validation Rules:**
 
-→ See agents/README.md
+- `sku` must not be empty
+- `weightKg` must be > 0 and <= 100
+- All dimensions must be > 0 and <= 200
+- `stockQuantity` must be >= 0
+- `minStockThreshold` must be >= 0
+- `unitCostUSD` must be > 0
 
-skills/ — reusable agent capabilities
-Purpose: Packaged instructions + scripts that agents (or you in Cursor) reuse across the repo.
+---
 
-Put here:
+### Shipment
 
-Skills for data analysis, code review, scraping, research, etc.
-Each skill = a folder with SKILL.md, optional scripts and resources
-Example included: skills/data-analysis/ (pandas cleaning script + metrics reference)
+Represents a delivery order that needs to be shipped to a customer.
 
-→ See skills/README.md
+**Interface: `Shipment`**
 
-mcps/ — Model Context Protocol servers
-Purpose: Bridge AI models to your systems — databases, APIs, GitHub, custom tools.
+```typescript
+interface Shipment {
+  id: string; // Unique shipment ID (e.g., "SH-2024-8821")
+  sku: string; // Product SKU being shipped
+  quantity: number; // Number of units
+  origin: WarehouseLocation; // Origin warehouse
+  destination: Destination; // Delivery destination
+  priority: ShipmentPriority; // Urgency level
+  declaredValueUSD: number; // Declared value for insurance
+  carrier: string | null; // Assigned carrier (null if not assigned)
+  status: ShipmentStatus; // Current status
+  createdAt: Date; // Order creation date
+}
 
-Put here:
+interface Destination {
+  city: string;
+  country: Country;
+  postalCode: string;
+  distanceKm: number; // Distance from origin warehouse
+}
 
-One subfolder per MCP server (e.g. database-mcp/, github-mcp/)
-Tool definitions, resources, and server config
-When to use: when an agent needs live access to data or actions your codebase alone cannot provide
+type Country = "United States" | "Spain";
+type ShipmentPriority = "Standard" | "Express" | "Same-day";
+type ShipmentStatus =
+  | "Pending"
+  | "Assigned"
+  | "In transit"
+  | "Delivered"
+  | "Failed";
+```
 
-→ See mcps/README.md
+**Validation Rules:**
 
-workflows/ — automation and orchestration
-Purpose: Connect systems without writing full apps — scheduled jobs, webhooks, notifications.
+- `quantity` must be > 0
+- `declaredValueUSD` must be > 0
+- `distanceKm` must be >= 0
 
-Put here:
+---
 
-n8n workflow exports, Make/Zapier configs, or orchestration docs
-Flows that link services/, data/pipelines/, and agents/
-Examples: new-order → Slack alert, nightly ETL trigger, lead → CRM sync
+### Carrier
 
-→ See workflows/README.md
+Represents a delivery carrier that TrackFlow works with.
 
-packages/ — shared libraries
-Purpose: Versionable code reused by multiple apps, agents, or pipelines.
+**Interface: `Carrier`**
 
-Put here:
+```typescript
+interface Carrier {
+  id: string; // Carrier ID (e.g., "CAR-UPS")
+  name: string; // Carrier name (e.g., "UPS")
+  operatesIn: Country[]; // Countries where they operate
+  baseRateUSD: number; // Base delivery cost (USD)
+  ratePerKgUSD: number; // Additional cost per kg (USD)
+  ratePerKmUSD: number; // Additional cost per km (USD)
+  avgDeliveryDays: number; // Average delivery time in days
+  onTimeRate: number; // On-time delivery rate (0-100)
+  maxWeightKg: number; // Maximum package weight they accept
+  handlesFragile: boolean; // Can handle fragile items
+  acceptsPriority: ShipmentPriority[]; // Priorities they support
+}
+```
 
-Shared TypeScript types (packages/shared/ → @repo/shared-types)
-UI component libraries, API clients, analytics SDKs
-Rule: if uis/ and services/ both need the same interface → extract it here
+**Validation Rules:**
 
-→ See packages/README.md
+- `baseRateUSD`, `ratePerKgUSD`, `ratePerKmUSD` must all be >= 0
+- `avgDeliveryDays` must be > 0
+- `onTimeRate` must be between 0 and 100
+- `maxWeightKg` must be > 0
+- `operatesIn` must contain at least 1 country
 
-shared/ — loose shared assets
-Purpose: Resources that are not a full package — schemas, templates, static assets, short docs.
+---
 
-Put here:
+### InventoryMovement
 
-JSON schemas, email templates, OpenAPI specs, design tokens
-Anything reused but too small or non-code for packages/
-→ See shared/README.md
+Tracks inventory changes (inbound or outbound).
 
-docs/ — cross-cutting documentation
-Purpose: Architecture and decisions that span the whole company project.
+**Interface: `InventoryMovement`**
 
-Put here:
+```typescript
+interface InventoryMovement {
+  id: string; // Movement ID
+  sku: string; // Product SKU
+  warehouse: WarehouseLocation; // Warehouse location
+  type: MovementType; // Inbound or outbound
+  quantity: number; // Number of units moved
+  reason: string; // Reason for movement
+  timestamp: Date; // When it happened
+}
 
-System architecture diagrams, ADRs, security/observability guides
-Conventions not tied to one app or agent
-→ See docs/README.md
+type MovementType = "Inbound" | "Outbound" | "Transfer" | "Adjustment";
+```
 
-infra/ — infrastructure and deployment
-Purpose: How the company project runs in Docker, cloud, or CI.
+---
 
-Put here:
+## Required Functions
 
-Dockerfiles, Terraform, K8s manifests, Nginx configs, CI/CD pipelines
-Keep at repo root: docker-compose.yml — orchestrates local dev for services/, databases, and other containers from one place.
+Implement these functions in the appropriate files according to the structure in the README.
 
-→ See infra/README.md
+### 1. Collection Operations (`src/utils/collections.ts`)
 
-scripts/ — helper scripts
-Purpose: Small, repeatable automation — not full apps.
+**`filterProductsByWarehouse(products: Product[], warehouse: WarehouseLocation): Product[]`**
 
-Put here:
+- Returns products in the specified warehouse
 
-Setup scripts, seed data generators, lint wrappers, one-off migrations
-Document each script: what it does, args, and how to run it
-Difference from internal/: scripts are usually single files; internal/ tools are structured projects with their own deps and tests.
+**`filterProductsByCategory(products: Product[], category: ProductCategory): Product[]`**
 
-→ See scripts/README.md
+- Returns products in the specified category
 
-internal/ — internal developer tools
-Purpose: Robust utilities for the engineering team.
+**`filterLowStockProducts(products: Product[]): Product[]`**
 
-Put here:
+- Returns products where `stockQuantity <= minStockThreshold`
 
-CLIs, packaged migration tools, prompt evaluators
-Tools with their own package.json, tests, and install steps
-→ See internal/README.md
+**`sortProductsByStock(products: Product[], order: "asc" | "desc"): Product[]`**
 
-Where should I put this?
-Quick decision guide:
+- Returns products sorted by stock quantity
+- Should not mutate the original array
 
-Does it have buttons and screens?          → uis/
-Does it run on a server / API / queue?     → services/
-Is it raw or transformed data?             → data/raw/ or data/process/
-Does it move data between systems?         → data/pipelines/
-Do you measure AI/pipeline quality?        → data/eval/
-Is it an AI assistant with a goal?         → agents/
-Is it a reusable AI capability/instruction?→ skills/
-Does AI need to call external tools/APIs?  → mcps/
-Is it n8n / scheduled automation?          → workflows/
-Will 2+ folders import the same code?      → packages/
-Is it a schema/template/asset, not a lib?  → shared/
-Is it architecture or team-wide docs?      → docs/
-Is it docker-compose for local dev?        → repo root
-Is it Docker / deploy / cloud config?      → infra/
-Is it a one-off script?                    → scripts/
-Is it a CLI tool with its own package?     → internal/
-Repository structure (tree)
-ai-engineering-company-project-monorepo/
-├── README.md / README.es.md   # This guide
-├── CONTEXT.md                 # ← Replace with your company briefing
-├── docker-compose.yml         # ← Local dev orchestration (repo root)
-├── uis/                       # Frontends (website, backoffice, dashboards)
-├── services/                  # Centralized FastAPI company API
-├── data/
-│   ├── raw/                   # Source datasets
-│   ├── pipelines/             # ETL/ELT jobs
-│   ├── process/               # Clean / intermediate outputs
-│   └── eval/                  # Evaluation sets and metrics
-├── agents/                    # AI agents (+ _template/ starter)
-├── skills/                    # Reusable agent skills
-├── mcps/                      # MCP servers for tool access
-├── workflows/                 # n8n and automation flows
-├── packages/                  # Shared libraries (@repo/shared-types, …)
-├── shared/                    # Schemas, templates, loose assets
-├── docs/                      # Architecture and cross-cutting docs
-├── infra/                     # Docker, Terraform, deployment
-├── scripts/                   # Helper scripts
-└── internal/                  # Internal CLIs and dev tools
-Links
-4Geeks Academy — AI Engineering
-How to start a coding project
-Contributors
-This template was built as part of the 4Geeks Academy AI Engineering Career Program by @marcogonzalo and @alezanchezr and many other contributors. Find out more about our AI Engineering Course, and other courses.
+**`sortCarriersByReliability(carriers: Carrier[], order: "asc" | "desc"): Carrier[]`**
 
-You can find other templates and resources like this at the 4Geeks Academy GitHub page.
+- Returns carriers sorted by on-time rate
+- Should not mutate the original array
 
-This template is maintained by 4Geeks Academy for the AI Engineering track. For exclusive use in the programme.
+---
+
+### 2. Search Operations (`src/utils/search.ts`)
+
+**`findProductBySKU(products: Product[], sku: string): Product | null`**
+
+- Performs linear search to find a product by SKU
+- SKU comparison should be case-insensitive
+- Returns the product if found, null otherwise
+
+**`findShipmentById(shipments: Shipment[], id: string): Shipment | null`**
+
+- Performs linear search to find a shipment by ID
+- Returns the shipment if found, null otherwise
+
+**`binarySearchProductByWeight(sortedProducts: Product[], targetWeight: number): number`**
+
+- Assumes the array is already sorted by weight (ascending)
+- Performs binary search to find the index of a product with the target weight
+- Returns the index if found, -1 otherwise
+
+---
+
+### 3. Carrier Scoring and Cost Calculation (`src/utils/transformations.ts`)
+
+**`calculateShippingCost(shipment: Shipment, product: Product, carrier: Carrier): number`**
+
+Calculates the total shipping cost based on:
+
+- Base rate: `carrier.baseRateUSD`
+- Weight cost: `product.weightKg * carrier.ratePerKgUSD * shipment.quantity`
+- Distance cost: `shipment.destination.distanceKm * carrier.ratePerKmUSD`
+- Priority surcharge:
+  - Standard: 0% additional
+  - Express: +30%
+  - Same-day: +60%
+- Returns total cost rounded to 2 decimal places
+
+**`scoreCarrierForShipment(carrier: Carrier, shipment: Shipment, product: Product): number`**
+
+Calculates a suitability score (0-100) for a carrier based on:
+
+- **Operates in destination country (20 points):**
+  - +20 if carrier operates in shipment's destination country
+  - 0 otherwise
+
+- **Can handle weight (20 points):**
+  - +20 if `product.weightKg * shipment.quantity <= carrier.maxWeightKg`
+  - 0 otherwise
+
+- **Supports priority (15 points):**
+  - +15 if carrier accepts the shipment's priority level
+  - 0 otherwise
+
+- **Handles fragile (15 points):**
+  - +15 if product is fragile and carrier handles fragile items
+  - +15 if product is not fragile
+  - 0 if product is fragile but carrier doesn't handle fragile
+
+- **Reliability (30 points):**
+  - Points = carrier's `onTimeRate * 0.3`
+  - (e.g., 90% on-time rate = 27 points)
+
+Returns score rounded to 2 decimal places
+
+**`selectBestCarrier(carriers: Carrier[], shipment: Shipment, product: Product): {carrier: Carrier, score: number, cost: number} | null`**
+
+- Scores all carriers for the shipment
+- Filters out carriers with score < 50 (unsuitable)
+- Among suitable carriers, selects the one with the lowest cost
+- Returns the best carrier with its score and cost, or null if no suitable carrier found
+
+---
+
+### 4. Aggregations and Reports (`src/utils/transformations.ts`)
+
+**`countProductsByCategory(products: Product[]): Record<ProductCategory, number>`**
+
+- Returns a count of products for each category
+
+**`calculateTotalInventoryValue(products: Product[]): number`**
+
+- Returns the total value of all inventory
+- Formula: sum of (`stockQuantity * unitCostUSD`) for all products
+- Round to 2 decimal places
+
+**`calculateAverageShipmentDistance(shipments: Shipment[]): number`**
+
+- Returns the average distance across all shipments
+- Round to 2 decimal places
+
+**`groupShipmentsByStatus(shipments: Shipment[]): Record<ShipmentStatus, Shipment[]>`**
+
+- Groups shipments by status
+- Returns an object where keys are statuses and values are arrays of shipments
+
+**`findTopCarriers(shipments: Shipment[], topN: number): Array<{carrier: string, count: number}>`**
+
+- Finds the N most used carriers based on assigned shipments
+- Ignores shipments with null carrier
+- Returns them sorted by usage count (highest first)
+- Each element contains carrier name and shipment count
+
+---
+
+### 5. Validations (`src/utils/validations.ts`)
+
+**`validateProduct(product: Product): { valid: boolean, errors: string[] }`**
+
+- Validates all business rules for a product
+- Returns an object with:
+  - `valid`: true if all validations pass, false otherwise
+  - `errors`: array of error messages (empty if valid)
+
+**`validateShipment(shipment: Shipment): { valid: boolean, errors: string[] }`**
+
+- Validates all business rules for a shipment
+- Returns an object with:
+  - `valid`: true if all validations pass, false otherwise
+  - `errors`: array of error messages (empty if valid)
+
+**`validateCarrier(carrier: Carrier): { valid: boolean, errors: string[] }`**
+
+- Validates all business rules for a carrier
+- Returns an object with:
+  - `valid`: true if all validations pass, false otherwise
+  - `errors`: array of error messages (empty if valid)
+
+---
+
+## Sample Data
+
+Use this data to test your functions:
+
+### Sample Products
+
+```typescript
+const sampleProducts: Product[] = [
+  {
+    sku: "SHOE-BLK-42",
+    name: "Black Running Shoes - Size 42",
+    category: "Fashion",
+    weightKg: 0.8,
+    dimensions: { lengthCm: 35, widthCm: 22, heightCm: 12 },
+    warehouse: "Los Angeles",
+    stockQuantity: 45,
+    minStockThreshold: 20,
+    unitCostUSD: 35.0,
+    isFragile: false,
+    status: "Active",
+  },
+  {
+    sku: "LAPTOP-DELL-15",
+    name: "Dell Laptop 15 inch",
+    category: "Electronics",
+    weightKg: 2.3,
+    dimensions: { lengthCm: 40, widthCm: 28, heightCm: 3 },
+    warehouse: "Zaragoza",
+    stockQuantity: 8,
+    minStockThreshold: 10,
+    unitCostUSD: 650.0,
+    isFragile: true,
+    status: "Low stock",
+  },
+  {
+    sku: "PERFUME-COCO-50",
+    name: "Coco Perfume 50ml",
+    category: "Cosmetics",
+    weightKg: 0.3,
+    dimensions: { lengthCm: 12, widthCm: 8, heightCm: 15 },
+    warehouse: "Los Angeles",
+    stockQuantity: 120,
+    minStockThreshold: 30,
+    unitCostUSD: 85.0,
+    isFragile: true,
+    status: "Active",
+  },
+];
+```
+
+### Sample Carriers
+
+```typescript
+const sampleCarriers: Carrier[] = [
+  {
+    id: "CAR-UPS",
+    name: "UPS",
+    operatesIn: ["United States"],
+    baseRateUSD: 5.0,
+    ratePerKgUSD: 1.2,
+    ratePerKmUSD: 0.05,
+    avgDeliveryDays: 3,
+    onTimeRate: 88,
+    maxWeightKg: 30,
+    handlesFragile: true,
+    acceptsPriority: ["Standard", "Express"],
+  },
+  {
+    id: "CAR-SEUR",
+    name: "SEUR",
+    operatesIn: ["Spain"],
+    baseRateUSD: 6.5,
+    ratePerKgUSD: 1.5,
+    ratePerKmUSD: 0.08,
+    avgDeliveryDays: 2,
+    onTimeRate: 92,
+    maxWeightKg: 25,
+    handlesFragile: true,
+    acceptsPriority: ["Standard", "Express", "Same-day"],
+  },
+  {
+    id: "CAR-DHL",
+    name: "DHL Express",
+    operatesIn: ["United States", "Spain"],
+    baseRateUSD: 12.0,
+    ratePerKgUSD: 2.0,
+    ratePerKmUSD: 0.1,
+    avgDeliveryDays: 1,
+    onTimeRate: 95,
+    maxWeightKg: 50,
+    handlesFragile: true,
+    acceptsPriority: ["Express", "Same-day"],
+  },
+];
+```
+
+### Sample Shipment
+
+```typescript
+const sampleShipment: Shipment = {
+  id: "SH-2024-8821",
+  sku: "LAPTOP-DELL-15",
+  quantity: 1,
+  origin: "Zaragoza",
+  destination: {
+    city: "Madrid",
+    country: "Spain",
+    postalCode: "28001",
+    distanceKm: 320,
+  },
+  priority: "Express",
+  declaredValueUSD: 650.0,
+  carrier: null,
+  status: "Pending",
+  createdAt: new Date("2024-03-15"),
+};
+```
+
+---
+
+## Acceptance Criteria
+
+Your implementation will be evaluated on:
+
+1. **Type Safety:** All interfaces defined correctly with appropriate types
+2. **Function Correctness:** Each function produces the expected output for the given inputs
+3. **Edge Case Handling:** Functions handle empty arrays, null values, and invalid data gracefully
+4. **Validation Logic:** Business rules are enforced accurately
+5. **Code Organization:** Functions are in the correct files according to responsibility
+6. **Naming Conventions:** Variables, functions, and types follow TypeScript conventions
+7. **No Mutations:** Sorting and filtering functions don't modify the original arrays
+8. **Pure Functions:** Functions only work with parameters, no global variables
+
+---
+
+## What Ana Expects
+
+> "Listen, we process 2,000+ shipments per week across both warehouses. I can't have your code breaking when there's a null value or an edge case. Write it like it's going into production tomorrow — because it is. Make it solid, make it testable, and make it maintainable."  
+> — Ana Whitfield, Head of Warehouse Operations
+
+---
+
+## Questions?
+
+If you're unsure about any requirement, ask your mentor. In a real work environment, you'd message Ana on Slack.
+
+---
+
+_This is a real TrackFlow project. What you build here will become part of the production warehouse and carrier management system used in Los Angeles and Zaragoza._
