@@ -48,13 +48,39 @@ export function validateCarrier(carrier: Carrier): {
 } {
   const errors: string[] = [];
 
-  if (carrier.baseRateUSD < 0) errors.push("Base rate must be greater than or equal to 0");
-  if (carrier.ratePerKgUSD < 0) errors.push("Rate per kg must be greater than or equal to 0");
-  if (carrier.ratePerKmUSD < 0) errors.push("Rate per km must be greater than or equal to 0");
-  if (carrier.avgDeliveryDays <= 0) errors.push("Average delivery days must be greater than 0");
-  if (carrier.onTimeRate < 0 || carrier.onTimeRate > 100) errors.push("On-time rate must be between 0 and 100");
-  if (carrier.maxWeightKg <= 0) errors.push("Max weight must be greater than 0");
-  if (carrier.operatesIn.length === 0) errors.push("Carrier must operate in at least one country");
+  if (carrier.baseRateUSD < 0) {
+    errors.push("Base rate must be greater than or equal to 0");
+  }
+  if (carrier.ratePerKgUSD < 0) {
+    errors.push("Rate per kg must be greater than or equal to 0");
+  }
+  if (carrier.ratePerKmUSD < 0) {
+    errors.push("Rate per km must be greater than or equal to 0");
+  }
+  if (carrier.avgDeliveryDays <= 0) {
+    errors.push("Average delivery days must be greater than 0");
+  }
+  if (carrier.onTimeRate < 0 ) {
+    errors.push("On-time rate cannot be negative");
+   }
+  if (carrier.onTimeRate > 100) {
+ errors.push("On-time rate cannot be greater than 100");
+  }
+  if (carrier.maxWeightKg <= 0) {
+    errors.push("Max weight must be greater than 0");
+  }
+  if (carrier.operatesIn.length === 0) {
+    errors.push("Carrier must operate in at least one country");
+  }
+  if (errors.length === 0) {
+    return {
+      valid: true,
+      errors: []
+    };
+  }
 
-  return { valid: errors.length === 0, errors };
+  return { 
+    valid: false,
+    errors: errors
+  };
 }
