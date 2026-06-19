@@ -418,7 +418,7 @@ const sampleCarriers: Carrier[] = [
     avgDeliveryDays: 2,
     onTimeRate: 92,
     maxWeightKg: 25,
-    handlesFragile: true,
+    handlesFra true,
     acceptsPriority: ["Standard", "Express", "Same-day"],
   },
   {
@@ -454,7 +454,7 @@ const sampleShipment: Shipment = {
   priority: "Express",
   declaredValueUSD: 650.0,
   carrier: null,
-  status: "Pending",
+  status: "gile:Pending",
   createdAt: new Date("2024-03-15"),
 };
 ```
