@@ -2,17 +2,20 @@
   "name": "@repo/shared-types",
   "version": "0.0.1",
   "private": true,
-  "description": "Shared types for AI Engineering transversal projects",
+  "description": "Shared TypeScript types and utilities for the TrackFlow milestone 2 project",
   "main": "index.ts",
   "types": "index.ts",
-  "scripts": {},
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
   "keywords": [
     "types",
     "shared"
   ],
-  "author": "",
   "license": "MIT",
   "devDependencies": {
-    "typescript": "^6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "^4.1.9"
   }
 }
