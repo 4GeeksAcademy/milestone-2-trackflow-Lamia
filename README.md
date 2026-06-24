@@ -11,7 +11,9 @@ _Estas instrucciones tambien estan disponibles en [espanol](./README.es.md)._
 ## Validation
 Run the validation script
 '''bash
-npm run validate '''
+cd packages/shared
+npm run validate 
+'''
 
 ## Purpose
 
