@@ -8,6 +8,10 @@ _Base template for transversal projects in the AI Engineering Career Program —
 _Estas instrucciones tambien estan disponibles en [espanol](./README.es.md)._
 
 ---
+## Validation
+Run the validation script
+'''bash
+npm run validate '''
 
 ## Purpose
 
