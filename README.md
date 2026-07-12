@@ -9,10 +9,13 @@ _Estas instrucciones tambien estan disponibles en [espanol](./README.es.md)._
 
 ---
 ## Validation
-Run the validation script
+Run the validation checks from the repository root:
 '''bash
-cd packages/shared
 npm run validate 
+'''
+You can also run:
+'''bash
+npm test
 '''
 
 ## Purpose

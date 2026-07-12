@@ -1,0 +1,9 @@
+{
+  "name": "milestone-2-trackflow-lamia",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "validate": "npm --prefix packages/shared run validate",
+    "test": "npm run validate"
+  }
+}
